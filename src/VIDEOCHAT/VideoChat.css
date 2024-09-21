@@ -1,0 +1,21 @@
+.video-chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f0f0f0;
+    height: 100vh;
+    justify-content: center; /* Center vertically */
+}
+
+.video-chat-header {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.video-options {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 20px;
+}

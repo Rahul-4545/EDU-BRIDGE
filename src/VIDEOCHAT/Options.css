@@ -1,0 +1,19 @@
+.options {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.option-button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.option-button:hover {
+    background-color: #0056b3;
+}

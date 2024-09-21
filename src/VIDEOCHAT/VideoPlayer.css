@@ -1,0 +1,9 @@
+.video-player {
+    width: 100%; /* Ensure it takes full width */
+    max-width: 800px; /* Limit the max width */
+    height: auto; /* Maintain aspect ratio */
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    background-color: black;
+    margin: 20px auto; /* Center the video player */
+}
