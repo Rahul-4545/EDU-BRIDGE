@@ -1,0 +1,86 @@
+/* Navbar1.css */
+
+.navbar {
+    width: 100%;
+    background-color: #333; /* Background color of the navbar */
+    position: fixed; /* Fixes the navbar to the top */
+    top: 0;
+    left: 50;
+    z-index: 1000; /* Ensures the navbar is above other content */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+}
+
+.logo1 {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding-right: 50px; /* Add or modify this */
+}
+
+.nav-links li {
+    display: inline;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 8px 15px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-links a:hover {
+    background-color: #555; /* Changes background on hover */
+    border-radius: 4px; /* Adds rounded corners to links */
+}
+
+.menu-toggle {
+    display: none; /* Hides the hamburger menu on large screens */
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.menu-toggle .bar {
+    height: 3px;
+    width: 25px;
+    background-color: white;
+    margin: 4px 0;
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex; /* Shows the hamburger menu on small screens */
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 60px;
+        left: -100%;
+        width: 100%;
+        height: 100vh;
+        background-color: #333;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: left 0.3s ease;
+    }
+
+    .nav-links.active {
+        left: 0; /* Slides the menu into view */
+    }
+
+    .nav-links li {
+        margin: 20px 0;
+    }
+}
