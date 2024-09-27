@@ -1,0 +1,87 @@
+/* NavStudent.css */
+
+/* Navbar container */
+.navbarstudent {
+    color: #ff9800; /* Adjust to preferred color */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Logo */
+.logostudent {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Navigation links */
+.nav-linkstudent {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Links in the navbar */
+.nav-linkstudent li {
+    position: relative;
+}
+
+.nav-linkstudent a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-linkstudent a:hover {
+    color: #ffcc00; /* Color when hovering */
+}
+
+/* Menu toggle (hamburger icon) for mobile view */
+.menu-togglestudent {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.menu-togglestudent .bar {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 4px 0;
+    transition: all 0.3s ease;
+}
+
+/* Responsive design for smaller screens */
+@media screen and (max-width: 768px) {
+    .nav-linkstudent {
+        position: absolute;
+        top: 60px;
+        right: 0;
+        width: 100%;
+        height: calc(100vh - 60px);
+        background-color: #0044cc;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        display: none;
+    }
+
+    .nav-linkstudent.active {
+        display: flex;
+    }
+
+    .nav-linkstudent li {
+        margin: 15px 0;
+    }
+
+    .menu-togglestudent {
+        display: flex;
+    }
+}

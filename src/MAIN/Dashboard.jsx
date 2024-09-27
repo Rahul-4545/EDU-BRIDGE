@@ -4,7 +4,7 @@ import { GiTeacher } from "react-icons/gi"; // Teacher icon
 import { BiSolidInstitution } from "react-icons/bi"; // Administrator icon
 import NavTeacher from './NavMain'; // Assuming Dashboard.jsx is in the same TEACHER folder
 import './Dashboard.css'; 
-import img1 from '../IMAGES/dashteachers.jpg';
+import img1 from '../IMAGES/dashmain.jpg';
 import DashFooter from './DashFooter'; // Ensure the correct path and extension
 
 const Dashboard = () => {

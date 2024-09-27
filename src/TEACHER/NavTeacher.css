@@ -1,0 +1,85 @@
+/* Navbar container */
+.navbarteacher {
+    color: #ff9800; /* Adjust to preferred color */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Logo */
+.logoteacher {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Navigation links */
+.nav-linkteacher { /* Use nav-linkteacher to match JSX */
+    display: flex;
+    list-style: none;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Links in the navbar */
+.nav-linkteacher li {
+    position: relative;
+}
+
+.nav-linkteacher a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-linkteacher a:hover {
+    color: #ffcc00; /* Color when hovering */
+}
+
+/* Menu toggle (hamburger icon) for mobile view */
+.menu-toggleteacher {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.menu-toggleteacher .bar {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 4px 0;
+    transition: all 0.3s ease;
+}
+
+/* Responsive design for smaller screens */
+@media screen and (max-width: 768px) {
+    .nav-linkteacher {
+        position: absolute;
+        top: 60px;
+        right: 0;
+        width: 100%;
+        height: calc(100vh - 60px);
+        background-color: #0044cc;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        display: none;
+    }
+
+    .nav-linkteacher.active {
+        display: flex;
+    }
+
+    .nav-linkteacher li {
+        margin: 15px 0;
+    }
+
+    .menu-toggleteacher {
+        display: flex;
+    }
+}
