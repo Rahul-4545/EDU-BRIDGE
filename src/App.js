@@ -10,6 +10,7 @@ import DashTeacher from './TEACHER/DashTeacher'
 import DashStudent from './STUDENT/DashStudent'
 
 
+
 function App() {
   return (
     <div className="App">
@@ -22,6 +23,8 @@ function App() {
                 <Route path="navbarteach" element={<NavTeacher/>} />
                 <Route path="dashteacher" element={<DashTeacher/>} />
                 <Route path="dashstudent" element={<DashStudent/>} />
+                
+
                 
             </Routes>
         </Router>

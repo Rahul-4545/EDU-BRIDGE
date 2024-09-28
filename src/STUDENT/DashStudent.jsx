@@ -7,11 +7,11 @@ import { AiFillCheckCircle } from "react-icons/ai"; // Quizzes icon
 import { MdRequestPage } from "react-icons/md"; // Resource Request icon (changed from ask a doubt)
 import NavStudent from './NavStudent'; // Assuming NavStudent component for students
 import './DashStudent.css'; // Update the CSS file for students
-import img2 from '../IMAGES/dashteachers.jpg';
-import img3 from '../IMAGES/virtualclass.jpg';
-import img4 from '../IMAGES/e-learning.jpg';  
-import img5 from '../IMAGES/resourcesharing.jpg';
-import img6 from '../IMAGES/quizzes.jpg';
+import img8 from '../IMAGES/dashstudents.jpg';
+import img9 from '../IMAGES/virtualclassstudents.jpg';
+import img10 from '../IMAGES/e-learningstudent.jpg';  
+import img11 from '../IMAGES/resources.jpg';
+import img12 from '../IMAGES/quizzesstudents.jpg';
 import img7 from '../IMAGES/resourcerequest.jpg';
 
 import FooterStudent from './FooterStudent'; // Student Footer component
@@ -39,7 +39,7 @@ const Dashboard = () => {
             Join us and take charge of your learning journey today!
           </p>
         </div>
-        <img src={img2} alt="Student Learning Transformation" className="dashboard-image-student" />
+        <img src={img8} alt="Student Learning Transformation" className="dashboard-image-student" />
       </div>
 
       {/* Explore Now Button */}
@@ -57,7 +57,7 @@ const Dashboard = () => {
             <p>Join live classes and interact with your teachers and classmates in real-time.</p>
             <button className="field-button">Explore More</button>
           </div>
-          <img src={img3} alt="Virtual Classroom" className="dashboard-image-student" />
+          <img src={img9} alt="Virtual Classroom" className="dashboard-image-student" />
         </div>
 
         {/* Pair 2: Study Materials and Image */}
@@ -68,7 +68,7 @@ const Dashboard = () => {
             <p>Access a wealth of educational content and resources for your studies.</p>
             <button className="field-button">Explore More</button>
           </div>
-          <img src={img4} alt="Study Materials" className="dashboard-image-student" />
+          <img src={img10} alt="Study Materials" className="dashboard-image-student" />
         </div>
 
         {/* Pair 3: E-learning and Image */}
@@ -76,10 +76,10 @@ const Dashboard = () => {
           <div className="field elearning-field">
             <IoMdSchool size={50} className="dashboard-icon" />
             <h3>E-learning</h3>
-            <p>Access online courses and learning materials anytime, anywhere.</p>
+            <p>Access online courses and learning materials anytime, anywhere</p>
             <button className="field-button">Explore More</button>
           </div>
-          <img src={img5} alt="E-learning" className="dashboard-image-student" />
+          <img src={img11} alt="E-learning" className="dashboard-image-student" />
         </div>
 
         {/* Pair 4: Quizzes and Image */}
@@ -90,7 +90,7 @@ const Dashboard = () => {
             <p>Test your knowledge and track your progress with interactive quizzes.</p>
             <button className="field-button">Explore More</button>
           </div>
-          <img src={img6} alt="Quizzes" className="dashboard-image-student" />
+          <img src={img12} alt="Quizzes" className="dashboard-image-student" />
         </div>
 
         {/* Pair 5: Resource Request and Image */}
