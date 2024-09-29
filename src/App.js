@@ -10,6 +10,8 @@ import DashTeacher from './TEACHER/DashTeacher'
 import DashStudent from './STUDENT/DashStudent'
 import QuizzTeacher from './TEACHER/QuizzTeacher';
 import QuizzStudent from './STUDENT/QuizzStudent';
+import ShareResources from './TEACHER/ShareResources';
+import ReceiveResources from './STUDENT/ReceiveResources'
 
 
 
@@ -29,7 +31,9 @@ function App() {
              
                 <Route path="quizz1" element={<QuizzTeacher />} /> {/* New route for Quiz Creation */}
                <Route path="quizz2" element={<QuizzStudent />} /> {/* New route for Quiz Attendance */}
-               
+               <Route path="share"  element={<ShareResources/>} />
+               <Route path="receive"  element={<ReceiveResources/>} />
+                
                 
 
                 

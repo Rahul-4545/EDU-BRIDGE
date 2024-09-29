@@ -3,6 +3,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,10 +18,23 @@ const io = new Server(server, {
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/uploads', express.static('uploads')); // Serve uploaded files statically
 
 // In-memory quizzes and submissions
 let quizzes = [];
 let submissions = []; // Each submission should store: { userId, quizId, answers }
+let resources = []; // Array to store resources
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Ensure this folder exists
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
 
 // Socket.io functionality
 io.on('connection', (socket) => {
@@ -87,6 +102,45 @@ app.post('/submit-quiz', (req, res) => {
   // Store the submission
   submissions.push({ userId, quizId, answers });
   res.json({ message: 'Quiz submitted successfully!' });
+});
+
+// Route to upload resources
+app.post('/upload-resource', upload.single('file'), (req, res) => {
+  const { title, description } = req.body;
+
+  // Validate title and description
+  if (!title || !description) {
+    return res.status(400).json({ message: 'Title and description are required' });
+  }
+
+  // Check if the file was uploaded successfully
+  if (!req.file) {
+    return res.status(400).json({ message: 'File upload failed' });
+  }
+
+  // Store resource data
+  const resource = {
+    id: Date.now(),
+    title,
+    description,
+    filePath: req.file.path,
+  };
+
+  resources.push(resource); // Store resource in the array
+  res.json({ message: 'Resource uploaded successfully!', resource });
+});
+
+
+// Route to get all available resources for a student
+app.get('/resources', (req, res) => {
+  const { userId } = req.query; // Assuming userId is passed in the query
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  // Return all resources for now (filtering logic can be added if necessary)
+  res.json({ resources });
 });
 
 // Start the server on port 3001
