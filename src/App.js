@@ -8,6 +8,9 @@ import DashFooter from './MAIN/DashFooter'
 import NavTeacher from './TEACHER/NavTeacher'
 import DashTeacher from './TEACHER/DashTeacher'
 import DashStudent from './STUDENT/DashStudent'
+import QuizzTeacher from './TEACHER/QuizzTeacher';
+import QuizzStudent from './STUDENT/QuizzStudent';
+
 
 
 
@@ -23,6 +26,10 @@ function App() {
                 <Route path="navbarteach" element={<NavTeacher/>} />
                 <Route path="dashteacher" element={<DashTeacher/>} />
                 <Route path="dashstudent" element={<DashStudent/>} />
+             
+                <Route path="quizz1" element={<QuizzTeacher />} /> {/* New route for Quiz Creation */}
+               <Route path="quizz2" element={<QuizzStudent />} /> {/* New route for Quiz Attendance */}
+               
                 
 
                 

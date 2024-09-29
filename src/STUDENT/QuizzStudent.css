@@ -1,0 +1,81 @@
+h2 {
+    text-align: center; /* Centers the heading */
+    margin-bottom: 20px; /* Adds space below the heading */
+}
+
+.quiz-list {
+    display: flex;
+    flex-direction: column; /* Stacks quizzes vertically */
+    align-items: center; /* Centers quizzes horizontally */
+    margin-bottom: 20px; /* Adds space below the quiz list */
+}
+
+.quiz-card {
+    width: 100%; /* Full width of the container */
+    max-width: 400px; /* Limits the width */
+    padding: 15px; /* Adds padding for touch target */
+    margin: 10px 0; /* Adds vertical spacing between cards */
+    background-color: #007bff; /* Primary color for the quiz card */
+    color: white; /* White text color */
+    border-radius: 5px; /* Rounds the corners */
+    text-align: center; /* Centers text in the card */
+    cursor: pointer; /* Changes cursor to pointer on hover */
+    transition: background-color 0.3s; /* Smooth background transition */
+}
+
+.quiz-card:hover {
+    background-color: #0056b3; /* Darkens card on hover */
+}
+
+.quiz-questions {
+    margin-top: 20px; /* Adds space above the questions */
+}
+
+.question-container {
+    margin: 20px 0; /* Adds vertical space between questions */
+}
+
+.option-container {
+    margin-left: 20px; /* Indents the option containers */
+}
+
+button {
+    padding: 10px 15px; /* Adds padding to buttons */
+    border: none; /* Removes default border */
+    border-radius: 5px; /* Rounds the corners */
+    background-color: #007bff; /* Bootstrap primary color */
+    color: white; /* White text color */
+    cursor: pointer; /* Changes cursor to pointer on hover */
+    font-size: 16px; /* Sets font size */
+}
+
+button:hover {
+    background-color: #0056b3; /* Darkens button on hover */
+}
+.quiz-list {
+    margin: 20px 0;
+  }
+  
+  .quiz-item {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    background-color: #f7f7f7; /* Light background color */
+    color: #333; /* Dark text color */
+  }
+  
+  .quiz-item:hover {
+    background-color: #d1e7dd; /* Light greenish background on hover */
+  }
+  
+  .quiz-questions {
+    margin-top: 20px;
+  }
+  
+  h3 {
+    color: #007bff; /* Blue color for quiz titles */
+  }
+  
