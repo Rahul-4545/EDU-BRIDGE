@@ -1,3 +1,5 @@
+// server.js
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -5,6 +7,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
+const pool = require('./db'); // Updated import for MySQL pool
 
 const app = express();
 const server = http.createServer(app);
@@ -19,11 +22,6 @@ const io = new Server(server, {
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads')); // Serve uploaded files statically
-
-// In-memory quizzes and submissions
-let quizzes = [];
-let submissions = []; // Each submission should store: { userId, quizId, answers }
-let resources = []; // Array to store resources
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -67,8 +65,11 @@ io.on('connection', (socket) => {
   });
 });
 
+// Import and use routes
+app.use('/api/auth', require('./routes/auth')); // Add your auth routes
+
 // Quiz routes
-app.post('/create-quiz', (req, res) => {
+app.post('/create-quiz', async (req, res) => {
   const quiz = req.body;
   quiz.id = quizzes.length + 1;
   quizzes.push(quiz);
@@ -76,36 +77,35 @@ app.post('/create-quiz', (req, res) => {
 });
 
 // Updated quizzes endpoint to return quizzes based on userId
-app.get('/quizzes', (req, res) => {
+app.get('/quizzes', async (req, res) => {
   const { userId } = req.query;  // Assume userId is passed in the query
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
   }
 
-  const attendedQuizIds = submissions
-    .filter(submission => submission.userId === userId)
-    .map(submission => submission.quizId);
+  const [attendedQuizzes] = await pool.query('SELECT quizId FROM submissions WHERE userId = ?', [userId]);
+  const attendedQuizIds = attendedQuizzes.map(submission => submission.quizId);
 
-  const availableQuizzes = quizzes.filter(quiz => !attendedQuizIds.includes(quiz.id));
+  const [availableQuizzes] = await pool.query('SELECT * FROM quizzes WHERE id NOT IN (?)', [attendedQuizIds]);
 
   // Always return an array, even if no quizzes are available
   res.json({ quizzes: availableQuizzes.length > 0 ? availableQuizzes : [] });
 });
 
 // Handle quiz submission
-app.post('/submit-quiz', (req, res) => {
+app.post('/submit-quiz', async (req, res) => {
   const { userId, quizId, answers } = req.body;
   if (!userId || !quizId || !Array.isArray(answers)) {
     return res.status(400).json({ message: 'User ID, Quiz ID, and answers are required' });
   }
 
-  // Store the submission
-  submissions.push({ userId, quizId, answers });
+  // Store the submission in the MySQL database
+  await pool.query('INSERT INTO submissions (userId, quizId, answers) VALUES (?, ?, ?)', [userId, quizId, JSON.stringify(answers)]);
   res.json({ message: 'Quiz submitted successfully!' });
 });
 
 // Route to upload resources
-app.post('/upload-resource', upload.single('file'), (req, res) => {
+app.post('/upload-resource', upload.single('file'), async (req, res) => {
   const { title, description } = req.body;
 
   // Validate title and description
@@ -118,7 +118,7 @@ app.post('/upload-resource', upload.single('file'), (req, res) => {
     return res.status(400).json({ message: 'File upload failed' });
   }
 
-  // Store resource data
+  // Store resource data in MySQL database
   const resource = {
     id: Date.now(),
     title,
@@ -126,20 +126,22 @@ app.post('/upload-resource', upload.single('file'), (req, res) => {
     filePath: req.file.path,
   };
 
-  resources.push(resource); // Store resource in the array
+  await pool.query('INSERT INTO resources (title, description, filePath) VALUES (?, ?, ?)', [title, description, resource.filePath]);
+  
   res.json({ message: 'Resource uploaded successfully!', resource });
 });
 
-
 // Route to get all available resources for a student
-app.get('/resources', (req, res) => {
+app.get('/resources', async (req, res) => {
   const { userId } = req.query; // Assuming userId is passed in the query
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
   }
 
-  // Return all resources for now (filtering logic can be added if necessary)
+  // Get all resources from the database
+  const [resources] = await pool.query('SELECT * FROM resources');
+  
   res.json({ resources });
 });
 

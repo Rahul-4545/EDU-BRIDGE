@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import './QuizzTeacher.css'; // Ensure this file exists for styling
+import './QuizzTeacher.css';
 
 const CreateQuiz = () => {
   const [quizTitle, setQuizTitle] = useState('');
   const [questions, setQuestions] = useState([{ question: '', options: ['', '', '', ''] }]);
+  const [loading, setLoading] = useState(false);
+  const [quizStatus, setQuizStatus] = useState(null);
 
   const handleQuestionChange = (index, value) => {
     const newQuestions = [...questions];
@@ -21,7 +23,12 @@ const CreateQuiz = () => {
     setQuestions([...questions, { question: '', options: ['', '', '', ''] }]);
   };
 
+  const removeQuestion = (index) => {
+    setQuestions(questions.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
+    setLoading(true);
     const quizData = { quizTitle, questions };
     try {
       const response = await fetch('http://localhost:3001/create-quiz', {
@@ -31,15 +38,17 @@ const CreateQuiz = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        alert('Quiz created successfully!');
-        // Optionally reset form
+        setQuizStatus('Quiz created successfully!');
         setQuizTitle('');
-        setQuestions([{ question: '', options: ['', '', '', ''] }]);
+        setQuestions([{ question: '', options: ['', '', '', ''] }]); // Reset form
       } else {
-        console.error('Failed to create quiz', response.statusText);
+        setQuizStatus('Failed to create quiz');
       }
     } catch (error) {
       console.error('Error creating quiz:', error);
+      setQuizStatus('Error creating quiz');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,10 +79,13 @@ const CreateQuiz = () => {
               placeholder={`Option ${oIndex + 1}`}
             />
           ))}
+          <button onClick={() => removeQuestion(qIndex)}>Remove Question</button>
         </div>
       ))}
       <button onClick={addQuestion}>Add Question</button>
-      <button onClick={handleSubmit}>Submit Quiz</button>
+      <button onClick={handleSubmit} disabled={loading}>Submit Quiz</button>
+
+      {quizStatus && <p>{quizStatus}</p>}
     </div>
   );
 };

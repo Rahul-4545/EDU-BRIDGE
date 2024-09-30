@@ -5,20 +5,21 @@ const AttendQuiz = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [answers, setAnswers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState(null);
   const userId = 'yourUserId'; // Replace with actual user ID logic
 
   useEffect(() => {
     const fetchQuizzes = async () => {
+      setLoading(true);
       try {
         const response = await fetch(`http://localhost:3001/quizzes?userId=${userId}`);
         const data = await response.json();
-        if (Array.isArray(data.quizzes)) {
-          setQuizzes(data.quizzes);
-        } else {
-          setQuizzes([]); // Fallback to empty array if no quizzes
-        }
+        setQuizzes(Array.isArray(data.quizzes) ? data.quizzes : []);
       } catch (error) {
         console.error('Error fetching quizzes:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchQuizzes();
@@ -31,6 +32,7 @@ const AttendQuiz = () => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:3001/submit-quiz', {
         method: 'POST',
@@ -38,25 +40,33 @@ const AttendQuiz = () => {
         body: JSON.stringify({ userId, quizId: selectedQuiz.id, answers }),
       });
       if (response.ok) {
-        alert('Quiz submitted successfully!');
-        setSelectedQuiz(null); // Reset selected quiz to hide it after submission
-        setAnswers([]); // Reset answers after submission
+        setSubmissionStatus('Quiz submitted successfully!');
+        setSelectedQuiz(null); // Reset quiz
+        setAnswers([]); // Clear answers
       } else {
-        console.error('Failed to submit quiz', response.statusText);
+        setSubmissionStatus('Failed to submit quiz');
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
+      setSubmissionStatus('Error submitting quiz');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div>
       <h2>Attend Quiz</h2>
+      {loading && <p>Loading...</p>}
       <div className="quiz-list">
         {quizzes.length > 0 ? (
           quizzes.map((quiz) => (
-            <div key={quiz.id} className="quiz-item" onClick={() => setSelectedQuiz(quiz)}>
-              <h3>{quiz.quizTitle} Quiz</h3> {/* Append 'Quiz' to the title */}
+            <div
+              key={quiz.id}
+              className={`quiz-item ${selectedQuiz?.id === quiz.id ? 'selected' : ''}`}
+              onClick={() => setSelectedQuiz(quiz)}
+            >
+              <h3>{quiz.quizTitle} Quiz</h3>
             </div>
           ))
         ) : (
@@ -66,7 +76,7 @@ const AttendQuiz = () => {
 
       {selectedQuiz && (
         <div className="quiz-questions">
-          <h3>Quiz: {selectedQuiz.quizTitle} Quiz</h3> {/* Append 'Quiz' here too */}
+          <h3>Quiz: {selectedQuiz.quizTitle} Quiz</h3>
           {selectedQuiz.questions.map((q, qIndex) => (
             <div key={qIndex}>
               <p>{q.question}</p>
@@ -85,9 +95,11 @@ const AttendQuiz = () => {
               ))}
             </div>
           ))}
-          <button onClick={handleSubmit}>Submit Quiz</button>
+          <button onClick={handleSubmit} disabled={loading}>Submit Quiz</button>
         </div>
       )}
+
+      {submissionStatus && <p>{submissionStatus}</p>}
     </div>
   );
 };

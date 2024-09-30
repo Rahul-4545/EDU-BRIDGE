@@ -11,7 +11,9 @@ import DashStudent from './STUDENT/DashStudent'
 import QuizzTeacher from './TEACHER/QuizzTeacher';
 import QuizzStudent from './STUDENT/QuizzStudent';
 import ShareResources from './TEACHER/ShareResources';
-import ReceiveResources from './STUDENT/ReceiveResources'
+import ReceiveResources from './STUDENT/ReceiveResources';
+import Login from './MAIN/Login'
+import Register from './MAIN/Register'
 
 
 
@@ -28,11 +30,15 @@ function App() {
                 <Route path="navbarteach" element={<NavTeacher/>} />
                 <Route path="dashteacher" element={<DashTeacher/>} />
                 <Route path="dashstudent" element={<DashStudent/>} />
-             
                 <Route path="quizz1" element={<QuizzTeacher />} /> {/* New route for Quiz Creation */}
                <Route path="quizz2" element={<QuizzStudent />} /> {/* New route for Quiz Attendance */}
                <Route path="share"  element={<ShareResources/>} />
                <Route path="receive"  element={<ReceiveResources/>} />
+               <Route path="login"  element={<Login/>} />
+               <Route path="register"  element={<Register/>} />
+               
+
+
                 
                 
 
