@@ -7,13 +7,13 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
-const pool = require('./db'); // Updated import for MySQL pool
+const pool = require('./db'); // MySQL connection pool
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins
+    origin: "*", // Allow all origins for simplicity; update in production
     methods: ["GET", "POST"],
   },
 });
@@ -21,7 +21,7 @@ const io = new Server(server, {
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static('uploads')); // Serve uploaded files statically
+app.use('/uploads', express.static('uploads')); // Serve static files from uploads folder
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/'); // Ensure this folder exists
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
   },
 });
 const upload = multer({ storage });
@@ -65,85 +65,98 @@ io.on('connection', (socket) => {
   });
 });
 
-// Import and use routes
-app.use('/api/auth', require('./routes/auth')); // Add your auth routes
+// Authentication Routes
+app.use('/api/auth', require('./routes/auth')); // Auth routes
 
-// Quiz routes
 app.post('/create-quiz', async (req, res) => {
-  const quiz = req.body;
-  quiz.id = quizzes.length + 1;
-  quizzes.push(quiz);
-  res.json({ message: 'Quiz created successfully!', quiz });
-});
+  const { title, questions, created_by } = req.body;
 
-// Updated quizzes endpoint to return quizzes based on userId
+  // Validate required fields
+  if (!title || !questions || !created_by) {
+    return res.status(400).json({ message: 'Title, questions, and created_by are required' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO quizzes (title, questions, created_by, created_at) VALUES (?, ?, ?, NOW())',
+      [title, JSON.stringify(questions), created_by]
+    );
+    res.json({ message: 'Quiz created successfully!', quiz: { title, created_by } });
+  } catch (error) {
+    console.error('Error creating quiz:', error);
+    res.status(500).json({ message: 'Error creating quiz', error: error.message });
+  }
+});
 app.get('/quizzes', async (req, res) => {
-  const { userId } = req.query;  // Assume userId is passed in the query
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+  try {
+    // Use the correct columns from your quizzes table
+    const [quizzes] = await pool.query('SELECT title, created_by AS createdBy, questions FROM quizzes');
+    res.json({ quizzes });
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    res.status(500).json({ message: 'Error fetching quizzes' });
   }
-
-  const [attendedQuizzes] = await pool.query('SELECT quizId FROM submissions WHERE userId = ?', [userId]);
-  const attendedQuizIds = attendedQuizzes.map(submission => submission.quizId);
-
-  const [availableQuizzes] = await pool.query('SELECT * FROM quizzes WHERE id NOT IN (?)', [attendedQuizIds]);
-
-  // Always return an array, even if no quizzes are available
-  res.json({ quizzes: availableQuizzes.length > 0 ? availableQuizzes : [] });
 });
 
-// Handle quiz submission
+
+// Handle quiz submission with mock userId
+// Handle quiz submission with mock userId
 app.post('/submit-quiz', async (req, res) => {
-  const { userId, quizId, answers } = req.body;
-  if (!userId || !quizId || !Array.isArray(answers)) {
-    return res.status(400).json({ message: 'User ID, Quiz ID, and answers are required' });
+  const { quiz_title, quiz_created_by, answers } = req.body; // Adjust keys to match the submissions table
+  const mockUserId = 1; // Replace this with actual user ID logic when implementing authentication
+
+  // Log incoming request body for debugging
+  console.log('Request Body:', req.body);
+
+  // Validate the request body
+  if (!quiz_title || !quiz_created_by || !Array.isArray(answers) || answers.length === 0) {
+    return res.status(400).json({ message: 'Quiz title, created by, and at least one answer are required' });
   }
 
-  // Store the submission in the MySQL database
-  await pool.query('INSERT INTO submissions (userId, quizId, answers) VALUES (?, ?, ?)', [userId, quizId, JSON.stringify(answers)]);
-  res.json({ message: 'Quiz submitted successfully!' });
+  try {
+    // Insert the submission into the database
+    const result = await pool.query(
+      'INSERT INTO submissions (user_id, quiz_title, quiz_created_by, answers, submitted_at) VALUES (?, ?, ?, ?, NOW())',
+      [mockUserId, quiz_title, quiz_created_by, JSON.stringify(answers)]
+    );
+
+    res.json({ message: 'Quiz submitted successfully!', result });
+  } catch (error) {
+    console.error('Error inserting into submissions:', error);
+    res.status(500).json({ message: 'Error submitting quiz', error: error.message || error });
+  }
 });
 
-// Route to upload resources
+
+// Upload Resource Route
 app.post('/upload-resource', upload.single('file'), async (req, res) => {
   const { title, description } = req.body;
 
-  // Validate title and description
   if (!title || !description) {
     return res.status(400).json({ message: 'Title and description are required' });
   }
-
-  // Check if the file was uploaded successfully
   if (!req.file) {
     return res.status(400).json({ message: 'File upload failed' });
   }
 
-  // Store resource data in MySQL database
-  const resource = {
-    id: Date.now(),
-    title,
-    description,
-    filePath: req.file.path,
-  };
-
-  await pool.query('INSERT INTO resources (title, description, filePath) VALUES (?, ?, ?)', [title, description, resource.filePath]);
-  
-  res.json({ message: 'Resource uploaded successfully!', resource });
+  try {
+    await pool.query('INSERT INTO resources (title, description, filePath) VALUES (?, ?, ?)', [title, description, req.file.path]);
+    res.json({ message: 'Resource uploaded successfully!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading resource', error });
+  }
 });
 
-// Route to get all available resources for a student
+// Fetch Resources without userId requirement
 app.get('/resources', async (req, res) => {
-  const { userId } = req.query; // Assuming userId is passed in the query
-
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+  try {
+    const [resources] = await pool.query('SELECT * FROM resources');
+    res.json({ resources });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching resources', error });
   }
-
-  // Get all resources from the database
-  const [resources] = await pool.query('SELECT * FROM resources');
-  
-  res.json({ resources });
 });
 
 // Start the server on port 3001
-server.listen(3001, () => console.log('Server is running on port 3001'));
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

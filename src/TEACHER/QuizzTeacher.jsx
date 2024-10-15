@@ -1,93 +1,95 @@
 import React, { useState } from 'react';
-import './QuizzTeacher.css';
 
-const CreateQuiz = () => {
-  const [quizTitle, setQuizTitle] = useState('');
-  const [questions, setQuestions] = useState([{ question: '', options: ['', '', '', ''] }]);
-  const [loading, setLoading] = useState(false);
-  const [quizStatus, setQuizStatus] = useState(null);
+const QuizzTeacher = () => {
+  const [title, setTitle] = useState('');
+  const [questions, setQuestions] = useState([{ text: '', options: ['', ''] }]); // Initial question with two options
+  const created_by = 1; // Example user ID (should be dynamically assigned)
 
-  const handleQuestionChange = (index, value) => {
-    const newQuestions = [...questions];
-    newQuestions[index].question = value;
-    setQuestions(newQuestions);
-  };
-
-  const handleOptionChange = (qIndex, oIndex, value) => {
-    const newQuestions = [...questions];
-    newQuestions[qIndex].options[oIndex] = value;
-    setQuestions(newQuestions);
-  };
-
+  // Handle adding a new question
   const addQuestion = () => {
-    setQuestions([...questions, { question: '', options: ['', '', '', ''] }]);
+    setQuestions([...questions, { text: '', options: ['', ''] }]);
   };
 
+  // Handle adding an option to a specific question
+  const addOption = (questionIndex) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[questionIndex].options.push('');
+    setQuestions(updatedQuestions);
+  };
+
+  // Handle removing a question
   const removeQuestion = (index) => {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    const quizData = { quizTitle, questions };
+  // Handle text change for questions and options
+  const handleQuestionChange = (index, value) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index].text = value;
+    setQuestions(updatedQuestions);
+  };
+
+  const handleOptionChange = (questionIndex, optionIndex, value) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[questionIndex].options[optionIndex] = value;
+    setQuestions(updatedQuestions);
+  };
+
+  // Handle quiz creation
+  const createQuiz = async () => {
     try {
       const response = await fetch('http://localhost:3001/create-quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quizData),
+        body: JSON.stringify({ title, questions, created_by }),
       });
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        setQuizStatus('Quiz created successfully!');
-        setQuizTitle('');
-        setQuestions([{ question: '', options: ['', '', '', ''] }]); // Reset form
+        alert('Quiz created successfully!');
       } else {
-        setQuizStatus('Failed to create quiz');
+        console.error('Error:', data.message);
+        alert(`Error: ${data.message}`);
       }
     } catch (error) {
       console.error('Error creating quiz:', error);
-      setQuizStatus('Error creating quiz');
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <div className="create-quiz-container">
+    <div>
       <h2>Create Quiz</h2>
       <input
         type="text"
-        value={quizTitle}
-        onChange={(e) => setQuizTitle(e.target.value)}
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
         placeholder="Quiz Title"
-        className="quiz-title-input"
       />
-      {questions.map((q, qIndex) => (
-        <div key={qIndex} className="quiz-question-input">
+      {questions.map((question, questionIndex) => (
+        <div key={questionIndex}>
           <input
             type="text"
-            value={q.question}
-            onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
-            placeholder={`Question ${qIndex + 1}`}
+            value={question.text}
+            onChange={(e) => handleQuestionChange(questionIndex, e.target.value)}
+            placeholder={`Question ${questionIndex + 1}`}
           />
-          {q.options.map((option, oIndex) => (
+          {question.options.map((option, optionIndex) => (
             <input
-              key={oIndex}
+              key={optionIndex}
               type="text"
               value={option}
-              onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-              placeholder={`Option ${oIndex + 1}`}
+              onChange={(e) => handleOptionChange(questionIndex, optionIndex, e.target.value)}
+              placeholder={`Option ${optionIndex + 1}`}
             />
           ))}
-          <button onClick={() => removeQuestion(qIndex)}>Remove Question</button>
+          <button onClick={() => addOption(questionIndex)}>Add Option</button>
+          <button onClick={() => removeQuestion(questionIndex)}>Remove Question</button>
         </div>
       ))}
       <button onClick={addQuestion}>Add Question</button>
-      <button onClick={handleSubmit} disabled={loading}>Submit Quiz</button>
-
-      {quizStatus && <p>{quizStatus}</p>}
+      <button onClick={createQuiz}>Create Quiz</button>
     </div>
   );
 };
 
-export default CreateQuiz;
+export default QuizzTeacher;

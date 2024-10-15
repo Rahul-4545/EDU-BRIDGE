@@ -1,93 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import './QuizzStudent.css';
+import React, { useEffect, useState } from 'react';
 
 const AttendQuiz = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
-  const [answers, setAnswers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [submissionStatus, setSubmissionStatus] = useState(null);
-  const userId = 'yourUserId'; // Replace with actual user ID logic
+  const [answers, setAnswers] = useState({}); // Store answers keyed by question index
 
   useEffect(() => {
     const fetchQuizzes = async () => {
-      setLoading(true);
       try {
-        const response = await fetch(`http://localhost:3001/quizzes?userId=${userId}`);
+        const response = await fetch('http://localhost:3001/quizzes');
         const data = await response.json();
-        setQuizzes(Array.isArray(data.quizzes) ? data.quizzes : []);
+
+        if (data && Array.isArray(data.quizzes)) {
+          setQuizzes(data.quizzes);
+        } else {
+          console.error('Unexpected response structure:', data);
+        }
       } catch (error) {
         console.error('Error fetching quizzes:', error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchQuizzes();
-  }, [userId]);
+  }, []);
 
-  const handleAnswerChange = (qIndex, value) => {
-    const newAnswers = [...answers];
-    newAnswers[qIndex] = value;
-    setAnswers(newAnswers);
+  const handleAnswerChange = (questionIndex, selectedOption) => {
+    setAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [questionIndex]: selectedOption, // Store the selected answer for the question
+    }));
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
+    if (!selectedQuiz) return;
+
+    // Validate answers length
+    if (Object.keys(answers).length !== selectedQuiz.questions.length) {
+      alert('Please answer all questions.');
+      return;
+    }
+
+    // Prepare submission data
+    const submissionData = {
+      quiz_title: selectedQuiz.title,
+      quiz_created_by: selectedQuiz.createdBy,
+      answers: Object.values(answers), // Submit answers as an array
+    };
+
+    console.log('Submitting Data:', submissionData); // Log the data being sent
+
     try {
       const response = await fetch('http://localhost:3001/submit-quiz', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, quizId: selectedQuiz.id, answers }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
       });
+
+      const data = await response.json();
+
       if (response.ok) {
-        setSubmissionStatus('Quiz submitted successfully!');
-        setSelectedQuiz(null); // Reset quiz
-        setAnswers([]); // Clear answers
+        alert(data.message);
+        setSelectedQuiz(null);
+        setAnswers({});
       } else {
-        setSubmissionStatus('Failed to submit quiz');
+        alert(`Error: ${data.message}`);
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
-      setSubmissionStatus('Error submitting quiz');
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div>
-      <h2>Attend Quiz</h2>
-      {loading && <p>Loading...</p>}
-      <div className="quiz-list">
-        {quizzes.length > 0 ? (
-          quizzes.map((quiz) => (
-            <div
-              key={quiz.id}
-              className={`quiz-item ${selectedQuiz?.id === quiz.id ? 'selected' : ''}`}
-              onClick={() => setSelectedQuiz(quiz)}
-            >
-              <h3>{quiz.quizTitle} Quiz</h3>
-            </div>
-          ))
-        ) : (
-          <p>No quizzes available</p>
-        )}
-      </div>
+      <h2>Available Quizzes</h2>
+      {quizzes.length > 0 ? (
+        quizzes.map((quiz) => (
+          <div key={`${quiz.title}-${quiz.createdBy}`}>
+            <h3>{quiz.title}</h3>
+            <button onClick={() => setSelectedQuiz(quiz)}>Take Quiz</button>
+          </div>
+        ))
+      ) : (
+        <p>No quizzes available</p>
+      )}
 
       {selectedQuiz && (
-        <div className="quiz-questions">
-          <h3>Quiz: {selectedQuiz.quizTitle} Quiz</h3>
-          {selectedQuiz.questions.map((q, qIndex) => (
-            <div key={qIndex}>
-              <p>{q.question}</p>
-              {q.options.map((option, oIndex) => (
-                <div key={oIndex}>
+        <div>
+          <h2>{selectedQuiz.title}</h2>
+          {/* Render questions */}
+          {selectedQuiz.questions.map((question, index) => (
+            <div key={index}>
+              <p>{question.text}</p>
+              {question.options.map((option, optionIndex) => (
+                <div key={optionIndex}>
                   <label>
                     <input
                       type="radio"
-                      name={`question-${qIndex}`}
+                      name={`question-${index}`}
                       value={option}
-                      onChange={(e) => handleAnswerChange(qIndex, e.target.value)}
+                      checked={answers[index] === option} // Check if this option is selected
+                      onChange={() => handleAnswerChange(index, option)} // Handle answer change
                     />
                     {option}
                   </label>
@@ -95,11 +108,10 @@ const AttendQuiz = () => {
               ))}
             </div>
           ))}
-          <button onClick={handleSubmit} disabled={loading}>Submit Quiz</button>
+          <button onClick={handleSubmit}>Submit Quiz</button>
+          <button onClick={() => setSelectedQuiz(null)}>Cancel</button>
         </div>
       )}
-
-      {submissionStatus && <p>{submissionStatus}</p>}
     </div>
   );
 };
