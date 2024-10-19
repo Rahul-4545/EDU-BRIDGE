@@ -65,15 +65,28 @@ io.on('connection', (socket) => {
   });
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Authentication Routes
 app.use('/api/auth', require('./routes/auth')); // Auth routes
 
+// Create a quiz
 app.post('/create-quiz', async (req, res) => {
   const { title, questions, created_by } = req.body;
 
-  // Validate required fields
-  if (!title || !questions || !created_by) {
-    return res.status(400).json({ message: 'Title, questions, and created_by are required' });
+  if (!title || !questions || questions.length === 0 || !created_by) {
+    return res.status(400).json({ message: 'Title, questions (non-empty), and created_by are required' });
   }
 
   try {
@@ -81,51 +94,88 @@ app.post('/create-quiz', async (req, res) => {
       'INSERT INTO quizzes (title, questions, created_by, created_at) VALUES (?, ?, ?, NOW())',
       [title, JSON.stringify(questions), created_by]
     );
-    res.json({ message: 'Quiz created successfully!', quiz: { title, created_by } });
+    res.status(201).json({ message: 'Quiz created successfully!', result });
   } catch (error) {
     console.error('Error creating quiz:', error);
-    res.status(500).json({ message: 'Error creating quiz', error: error.message });
+    res.status(500).json({ message: 'Error creating quiz' });
   }
 });
+
+// Fetch quizzes
 app.get('/quizzes', async (req, res) => {
   try {
-    // Use the correct columns from your quizzes table
-    const [quizzes] = await pool.query('SELECT title, created_by AS createdBy, questions FROM quizzes');
-    res.json({ quizzes });
+    const [quizzes] = await pool.query('SELECT * FROM quizzes');
+    res.status(200).json({ quizzes });
   } catch (error) {
     console.error('Error fetching quizzes:', error);
     res.status(500).json({ message: 'Error fetching quizzes' });
   }
 });
 
+// Delete a quiz
+app.delete('/delete-quiz/:title', async (req, res) => {
+  const { title } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM quizzes WHERE title = ?', [title]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+    res.status(200).json({ message: 'Quiz deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting quiz:', error);
+    res.status(500).json({ message: 'Error deleting quiz' });
+  }
+});
 
-// Handle quiz submission with mock userId
-// Handle quiz submission with mock userId
+// Submit a quiz
 app.post('/submit-quiz', async (req, res) => {
-  const { quiz_title, quiz_created_by, answers } = req.body; // Adjust keys to match the submissions table
-  const mockUserId = 1; // Replace this with actual user ID logic when implementing authentication
+  const { quiz_title, quiz_created_by, answers } = req.body;
+  const user_id = 1; // Example user ID, should come from authentication
 
-  // Log incoming request body for debugging
-  console.log('Request Body:', req.body);
-
-  // Validate the request body
-  if (!quiz_title || !quiz_created_by || !Array.isArray(answers) || answers.length === 0) {
-    return res.status(400).json({ message: 'Quiz title, created by, and at least one answer are required' });
+  if (!quiz_title || !answers || answers.length === 0 || !quiz_created_by) {
+    return res.status(400).json({ message: 'Quiz title, answers, and created_by are required' });
   }
 
   try {
-    // Insert the submission into the database
-    const result = await pool.query(
-      'INSERT INTO submissions (user_id, quiz_title, quiz_created_by, answers, submitted_at) VALUES (?, ?, ?, ?, NOW())',
-      [mockUserId, quiz_title, quiz_created_by, JSON.stringify(answers)]
+    const [existingSubmission] = await pool.query(
+      'SELECT * FROM submissions WHERE quiz_title = ? AND user_id = ?',
+      [quiz_title, user_id]
     );
 
-    res.json({ message: 'Quiz submitted successfully!', result });
+    if (existingSubmission.length > 0) {
+      return res.status(400).json({ message: 'You have already submitted this quiz.' });
+    }
+
+    const [result] = await pool.query(
+      'INSERT INTO submissions (user_id, quiz_title, quiz_created_by, answers, submitted_at) VALUES (?, ?, ?, ?, NOW())',
+      [user_id, quiz_title, quiz_created_by, JSON.stringify(answers)]
+    );
+    res.status(201).json({ message: 'Quiz submitted successfully!', result });
   } catch (error) {
-    console.error('Error inserting into submissions:', error);
-    res.status(500).json({ message: 'Error submitting quiz', error: error.message || error });
+    console.error('Error submitting quiz:', error);
+    res.status(500).json({ message: 'Error submitting quiz' });
   }
 });
+
+// Fetch submitted quizzes for a user
+app.get('/submitted-quizzes/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const [submittedQuizzes] = await pool.query('SELECT quiz_title FROM submissions WHERE user_id = ?', [userId]);
+    const titles = submittedQuizzes.map((submission) => submission.quiz_title);
+    res.status(200).json({ submittedQuizzes: titles });
+  } catch (error) {
+    console.error('Error fetching submitted quizzes:', error);
+    res.status(500).json({ message: 'Error fetching submitted quizzes' });
+  }
+});
+
+
+
+
+
+
 
 
 // Upload Resource Route

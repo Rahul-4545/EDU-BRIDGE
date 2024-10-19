@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import './QuizzStudent.css'; 
 
 const AttendQuiz = () => {
   const [quizzes, setQuizzes] = useState([]);
+  const [submittedQuizzes, setSubmittedQuizzes] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
-  const [answers, setAnswers] = useState({}); // Store answers keyed by question index
+  const [answers, setAnswers] = useState({});
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -11,10 +13,16 @@ const AttendQuiz = () => {
         const response = await fetch('http://localhost:3001/quizzes');
         const data = await response.json();
 
+        // Fetch submitted quizzes for the user (mockUserId = 1)
+        const submittedResponse = await fetch('http://localhost:3001/submitted-quizzes/1');
+        const submittedData = await submittedResponse.json();
+
         if (data && Array.isArray(data.quizzes)) {
-          setQuizzes(data.quizzes);
-        } else {
-          console.error('Unexpected response structure:', data);
+          const availableQuizzes = data.quizzes.filter(
+            (quiz) => !submittedData.submittedQuizzes.includes(quiz.title)
+          );
+          setQuizzes(availableQuizzes);
+          setSubmittedQuizzes(submittedData.submittedQuizzes);
         }
       } catch (error) {
         console.error('Error fetching quizzes:', error);
@@ -23,51 +31,40 @@ const AttendQuiz = () => {
     fetchQuizzes();
   }, []);
 
-  const handleAnswerChange = (questionIndex, selectedOption) => {
+  const handleAnswerChange = (questionIndex, answer) => {
     setAnswers((prevAnswers) => ({
       ...prevAnswers,
-      [questionIndex]: selectedOption, // Store the selected answer for the question
+      [questionIndex]: answer,
     }));
   };
 
   const handleSubmit = async () => {
     if (!selectedQuiz) return;
 
-    // Validate answers length
-    if (Object.keys(answers).length !== selectedQuiz.questions.length) {
-      alert('Please answer all questions.');
-      return;
-    }
-
-    // Prepare submission data
-    const submissionData = {
-      quiz_title: selectedQuiz.title,
-      quiz_created_by: selectedQuiz.createdBy,
-      answers: Object.values(answers), // Submit answers as an array
-    };
-
-    console.log('Submitting Data:', submissionData); // Log the data being sent
-
     try {
-      const response = await fetch('http://localhost:3001/submit-quiz', {
+      const response = await fetch(`http://localhost:3001/submit-quiz`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submissionData),
+        body: JSON.stringify({
+          quiz_title: selectedQuiz.title,
+          quiz_created_by: selectedQuiz.created_by || 1,
+          answers: Object.values(answers),
+        }),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        alert(data.message);
+        alert('Quiz submitted successfully!');
         setSelectedQuiz(null);
         setAnswers({});
       } else {
-        alert(`Error: ${data.message}`);
+        const errorData = await response.json();
+        alert(errorData.message);
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
+      alert('An error occurred while submitting the quiz.');
     }
   };
 
@@ -76,7 +73,7 @@ const AttendQuiz = () => {
       <h2>Available Quizzes</h2>
       {quizzes.length > 0 ? (
         quizzes.map((quiz) => (
-          <div key={`${quiz.title}-${quiz.createdBy}`}>
+          <div key={quiz.title}>
             <h3>{quiz.title}</h3>
             <button onClick={() => setSelectedQuiz(quiz)}>Take Quiz</button>
           </div>
@@ -88,23 +85,20 @@ const AttendQuiz = () => {
       {selectedQuiz && (
         <div>
           <h2>{selectedQuiz.title}</h2>
-          {/* Render questions */}
-          {selectedQuiz.questions.map((question, index) => (
-            <div key={index}>
-              <p>{question.text}</p>
+          {selectedQuiz.questions.map((question, questionIndex) => (
+            <div key={questionIndex}>
+              <h4>{question.text}</h4>
               {question.options.map((option, optionIndex) => (
-                <div key={optionIndex}>
-                  <label>
-                    <input
-                      type="radio"
-                      name={`question-${index}`}
-                      value={option}
-                      checked={answers[index] === option} // Check if this option is selected
-                      onChange={() => handleAnswerChange(index, option)} // Handle answer change
-                    />
-                    {option}
-                  </label>
-                </div>
+                <label key={optionIndex}>
+                  <input
+                    type="radio"
+                    name={`question-${questionIndex}`}
+                    value={option}
+                    checked={answers[questionIndex] === option}
+                    onChange={() => handleAnswerChange(questionIndex, option)}
+                  />
+                  {option}
+                </label>
               ))}
             </div>
           ))}
